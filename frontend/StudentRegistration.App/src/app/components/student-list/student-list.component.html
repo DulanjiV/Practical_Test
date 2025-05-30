@@ -1,0 +1,268 @@
+<div class="container-fluid p-4">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h1 class="text-primary">Student Registration System</h1>
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-primary" (click)="openAddForm()" [disabled]="loading">
+        <i class="bi bi-plus-circle me-2"></i>Add Student
+      </button>
+    </div>
+  </div>
+
+  <div class="modal fade" [class.show]="successMessage" [style.display]="successMessage ? 'block' : 'none'"
+    tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true"
+    style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="text-success mb-3">
+            <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
+          </div>
+          <h5 class="text-success mb-3">Success!</h5>
+          <p class="mb-3">{{ successMessage }}</p>
+          <button type="button" class="btn btn-success" (click)="dismissMessage()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" [class.show]="errorMessage" [style.display]="errorMessage ? 'block' : 'none'" tabindex="-1"
+    role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="text-danger mb-3">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem;"></i>
+          </div>
+          <h5 class="text-danger mb-3">Error!</h5>
+          <p class="mb-3">{{ errorMessage }}</p>
+          <button type="button" class="btn btn-danger" (click)="dismissMessage()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" [class.show]="warningMessage" [style.display]="warningMessage ? 'block' : 'none'"
+    tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="text-warning mb-3">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem;"></i>
+          </div>
+          <h5 class="text-warning mb-3">Warning!</h5>
+          <p class="mb-3">{{ warningMessage }}</p>
+          <button type="button" class="btn btn-warning" (click)="dismissMessage()">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" [class.show]="showDeleteConfirm" [style.display]="showDeleteConfirm ? 'block' : 'none'"
+    tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true"
+    style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="text-warning mb-3">
+            <i class="fas fa-question-circle" style="font-size: 3rem;"></i>
+          </div>
+          <h5 class="text-dark mb-3">Confirm Delete</h5>
+          <p class="mb-3" *ngIf="studentToDelete">
+            Are you sure you want to delete<br>
+            <strong>{{ studentToDelete.firstName }} {{ studentToDelete.lastName }}</strong>?
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-secondary" (click)="cancelDelete()" [disabled]="loading">Cancel</button>
+            <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <span *ngIf="loading">Deleting...</span>
+            <span *ngIf="!loading">Delete</span>
+          </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-primary">
+                <tr>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Mobile</th>
+                  <th>Email</th>
+                  <th>NIC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let student of filteredStudents" [class.table-info]="isSelected(student)"
+                  (click)="selectStudent(student)" style="cursor: pointer;">
+                  <td>{{ student.firstName }}</td>
+                  <td>{{ student.lastName }}</td>
+                  <td>{{ student.mobile }}</td>
+                  <td>{{ student.email }}</td>
+                  <td>{{ student.nic }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="loading" class="text-center p-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <div *ngIf="!loading && filteredStudents.length === 0" class="text-center p-4 text-muted">
+            <i class="bi bi-person-x fs-1"></i>
+            <p class="mt-2">No students found</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div *ngIf="selectedStudent" class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Student Details</h5>
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary btn-sm" [disabled]="currentIndex <= 0"
+              (click)="navigateStudent('prev')">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" [disabled]="currentIndex >= filteredStudents.length - 1"
+              (click)="navigateStudent('next')">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="text-center mb-3">
+            <div class="bg-light rounded-circle d-inline-flex justify-content-center align-items-center"
+              style="width: 80px; height: 80px;">
+              <i class="bi bi-person fs-1 text-muted"></i>
+            </div>
+            <h4 class="mt-2">{{ selectedStudent.firstName }} {{ selectedStudent.lastName }}</h4>
+          </div>
+
+          <div class="mb-3">
+            <div class="row mb-2">
+              <div class="col-5"><strong>First Name:</strong></div>
+              <div class="col-7">{{ selectedStudent.firstName }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5"><strong>Last Name:</strong></div>
+              <div class="col-7">{{ selectedStudent.lastName }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5"><strong>Mobile:</strong></div>
+              <div class="col-7">{{ selectedStudent.mobile }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5"><strong>Email:</strong></div>
+              <div class="col-7">{{ selectedStudent.email }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5"><strong>NIC:</strong></div>
+              <div class="col-7">{{ selectedStudent.nic }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5"><strong>Birth Date:</strong></div>
+              <div class="col-7">{{ formatDate(selectedStudent.dateOfBirth) }}</div>
+            </div>
+            <div class="row mb-2" *ngIf="selectedStudent.address">
+              <div class="col-5"><strong>Address:</strong></div>
+              <div class="col-7">{{ selectedStudent.address }}</div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" (click)="openEditForm()" [disabled]="loading">
+              <i class="bi bi-pencil me-2"></i>Edit Student
+            </button>
+            <button class="btn btn-danger" (click)="deleteStudent()" [disabled]="loading">
+              <i class="bi bi-trash me-2"></i>Delete Student
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!selectedStudent" class="card">
+        <div class="card-body text-center text-muted p-5">
+          <i class="bi bi-person-lines-fill fs-1"></i>
+          <p class="mt-3">Click on a student to view details</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showForm" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isEdit ? 'Edit Student' : 'Add New Student' }}</h5>
+        <button type="button" class="btn-close" (click)="closeForm()"></button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">First Name *</label>
+              <input type="text" class="form-control" [(ngModel)]="formStudent.firstName" name="firstName" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Last Name *</label>
+              <input type="text" class="form-control" [(ngModel)]="formStudent.lastName" name="lastName" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Mobile *</label>
+              <input type="tel" class="form-control" [(ngModel)]="formStudent.mobile" name="mobile" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-control" [(ngModel)]="formStudent.email" name="email" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">NIC *</label>
+              <input type="text" class="form-control" [(ngModel)]="formStudent.nic" name="nic" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Date of Birth *</label>
+              <input type="date" class="form-control" [(ngModel)]="formStudent.dateOfBirth" name="dateOfBirth" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="formStudent.address" name="address"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="saveStudent()" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          <span *ngIf="loading">{{ isEdit ? 'Updating...' : 'Creating...' }}</span>
+          <span *ngIf="!loading">{{ isEdit ? 'Update' : 'Create' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
