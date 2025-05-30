@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Student, CreateStudentDto, UpdateStudentDto } from '../models/student.model';
+import { Student, CreateStudentDto, UpdateStudentDto, StudentSearchRequest, PagedResultDto } from '../models/student.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,8 +11,15 @@ export class StudentService {
 
   constructor(private http: HttpClient) {}
 
-  getAllStudents(): Observable<Student[]> {
-    return this.http.get<Student[]>(this.apiUrl);
+  getAllStudents(request: StudentSearchRequest): Observable<PagedResultDto<Student>> {
+    let params = new HttpParams()
+      .set('page', request.page.toString())
+      .set('pageSize', request.pageSize.toString())
+
+    if (request.searchTerm) {
+      params = params.set('searchTerm', request.searchTerm);
+    }
+    return this.http.get<PagedResultDto<Student>>(this.apiUrl, { params });
   }
 
   getStudentById(id: number): Observable<Student> {

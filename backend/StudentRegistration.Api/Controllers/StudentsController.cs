@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using StudentRegistration.Api.Data.Context;
 using StudentRegistration.Api.Models.DTOs;
 using StudentRegistration.Api.Models.Entities;
+using StudentRegistration.Api.Models.Requests;
 using StudentRegistration.Api.Services;
 
 namespace StudentRegistration.Api.Controllers
@@ -19,9 +20,10 @@ namespace StudentRegistration.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllStudents()
+        public async Task<IActionResult> GetAllStudents([FromQuery] StudentSearchRequest request)
         {
-            return Ok(await _service.GetAllStudentsAsync());
+            var result = await _service.GetAllStudentsAsync(request);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]

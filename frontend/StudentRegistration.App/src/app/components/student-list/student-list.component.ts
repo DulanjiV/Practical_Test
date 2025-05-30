@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { StudentService } from '../../services/student.service';
-import { Student } from '../../models/student.model';
+import { Student, StudentSearchRequest, PagedResultDto } from '../../models/student.model';
 
 @Component({
   selector: 'app-student-list',
@@ -13,10 +13,14 @@ import { Student } from '../../models/student.model';
   styleUrls: ['./student-list.component.css']
 })
 export class StudentListComponent implements OnInit {
-  students: Student[] = [];
+  Math = Math;
   filteredStudents: Student[] = [];
   selectedStudent: Student | null = null;
+  pagedResult: PagedResultDto<Student> | null = null;
   currentIndex = -1;
+  searchTerm = '';
+  currentPage = 1;
+  pageSize = 10;
   loading = false;
   successMessage = '';
   errorMessage = '';
@@ -44,34 +48,71 @@ export class StudentListComponent implements OnInit {
 
   loadStudents(): void {
     this.loading = true;
-    this.studentService.getAllStudents().subscribe({
-      next: (students) => {
-        this.students = students;
-        this.filterStudents();
 
-        if (this.selectedStudent) {
-          const updatedStudent = students.find(s => s.id === this.selectedStudent!.id);
-          if (updatedStudent) {
-            this.selectedStudent = updatedStudent;
-            this.currentIndex = this.filteredStudents.findIndex(s => s.id === updatedStudent.id);
-          } else {
-            this.selectedStudent = null;
-            this.currentIndex = -1;
-          }
-        }
+    const searchRequest: StudentSearchRequest = {
+      searchTerm: this.searchTerm || undefined,
+      page: this.currentPage,
+      pageSize: this.pageSize
+    };
 
+    this.studentService.getAllStudents(searchRequest).subscribe({
+      next: (result: PagedResultDto<Student>) => {
+        this.pagedResult = result;
+        this.filteredStudents = result.data;
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading students:', error);
         this.loading = false;
-        this.showError('Error loading students');
       }
     });
   }
 
-  filterStudents(): void {
-    this.filteredStudents = [...this.students];
+  onSearch(): void {
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
+  onPageChange(page: number): void {
+    if (page >= 1 && page <= (this.pagedResult?.totalPages || 1)) {
+      this.currentPage = page;
+      this.loadStudents();
+    }
+  }
+
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+    this.loadStudents();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.onSearch();
+  }
+
+  getPageNumbers(): number[] {
+    if (!this.pagedResult) return [];
+
+    const totalPages = this.pagedResult.totalPages;
+    const currentPage = this.pagedResult.currentPage;
+    const pages: number[] = [];
+
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+
+    if (endPage - startPage < 4) {
+      if (startPage === 1) {
+        endPage = Math.min(totalPages, startPage + 4);
+      } else {
+        startPage = Math.max(1, endPage - 4);
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
   }
 
   selectStudent(student: Student): void {

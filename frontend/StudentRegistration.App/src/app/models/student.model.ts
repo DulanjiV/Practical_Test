@@ -28,3 +28,18 @@ export interface UpdateStudentDto {
   dateOfBirth: string;
   address: string;
 }
+
+export interface StudentSearchRequest {
+  searchTerm?: string;
+  page: number;
+  pageSize: number;
+}
+export interface PagedResultDto<T> {
+  data: T[];
+  totalRecords: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
